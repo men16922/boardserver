@@ -4,6 +4,18 @@ spring:
     jdbc-url: jdbc:mysql://localhost:3306/board
     username: root
     password: 1234
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      repositories:
+        enabled: false
+
+expire:
+  defaultTime: 3600 #1분
 
 mybatis:
   mapper-locations: classpath:com.fastcampus.boardserver.mapper/*.xml
