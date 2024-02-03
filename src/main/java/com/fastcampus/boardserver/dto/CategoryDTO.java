@@ -9,9 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CategoryDTO {
-    public enum SortStatus {
-        CATEGORIES, NEWEST, OLDEST
-    }
     private int id;
     private String name;
     private SortStatus sortStatus;

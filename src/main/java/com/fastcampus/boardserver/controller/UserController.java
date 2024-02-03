@@ -16,49 +16,54 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/users")
 @Log4j2
 public class UserController {
 
     private final UserServiceImpl userService;
+    private static final ResponseEntity<LoginResponse> FAIL_RESPONSE = new ResponseEntity<LoginResponse>(HttpStatus.BAD_REQUEST);
     private static LoginResponse loginResponse;
 
     @Autowired
     public UserController(UserServiceImpl userService) {
-        this.userService = (UserServiceImpl) userService;
+        this.userService = userService;
     }
+
 
     @PostMapping("sign-up")
     @ResponseStatus(HttpStatus.CREATED)
-    public void signUp(@RequestBody UserDTO userDto) {
-        if (userDto.hasNullDataBeforeSignup(userDto)) {
-            throw new RuntimeException("회원가입 정보를 확인해주세요.");
+    public void signUp(@RequestBody UserDTO userDTO) {
+        if (UserDTO.hasNullDataBeforeSignup(userDTO)) {
+            throw new NullPointerException("회원가입시 필수 데이터를 모두 입력해야 합니다.");
         }
-        userService.register(userDto);
+        userService.register(userDTO);
     }
 
     @PostMapping("sign-in")
-    public HttpStatus login(@RequestBody UserLoginRequest userLoginRequest, HttpSession session) {
-        ResponseEntity<LoginResponse> responseResponseEntity = null;
-        String id = userLoginRequest.getUserId();
-        String password = userLoginRequest.getPassword();
-        LoginResponse loginResponse;
-        UserDTO userInfo = userService.login(id, password);
+    public HttpStatus login(@RequestBody UserLoginRequest loginRequest,
+                            HttpSession session) {
+        ResponseEntity<LoginResponse> responseEntity = null;
+        String userId = loginRequest.getUserId();
+        String password = loginRequest.getPassword();
+        UserDTO userInfo = userService.login(userId, password);
+        String id = userInfo.getId().toString();
 
         if (userInfo == null) {
             return HttpStatus.NOT_FOUND;
         } else if (userInfo != null) {
             loginResponse = LoginResponse.success(userInfo);
-            if (userInfo.getStatus() == (UserDTO.Status.ADMIN)) {
+            if (userInfo.getStatus() == (UserDTO.Status.ADMIN))
                 SessionUtil.setLoginAdminId(session, id);
-            } else {
+            else
                 SessionUtil.setLoginMemberId(session, id);
-            }
-            responseResponseEntity = new ResponseEntity<LoginResponse>(loginResponse, HttpStatus.OK);
+
+            responseEntity = new ResponseEntity<LoginResponse>(loginResponse, HttpStatus.OK);
         } else {
-            throw new RuntimeException("Login Error! 유저 정보가 없거나 지원되지 않는 유저입니다.");
+            throw new RuntimeException("Login Error! 유저 정보가 없거나 지워진 유저 정보입니다.");
         }
+
         return HttpStatus.OK;
     }
 
@@ -77,36 +82,36 @@ public class UserController {
 
     @PatchMapping("password")
     @LoginCheck(type = LoginCheck.UserType.USER)
-    public ResponseEntity<LoginResponse> updateUserPassword(String accountId, @RequestBody UserUpdatePasswordRequest userUpdatePasswordRequest, HttpSession session) {
+    public ResponseEntity<LoginResponse> updateUserPassword(String accountId, @RequestBody UserUpdatePasswordRequest userUpdatePasswordRequest,
+                                                            HttpSession session) {
         ResponseEntity<LoginResponse> responseEntity = null;
-        String id = accountId;
+        String Id = accountId;
         String beforePassword = userUpdatePasswordRequest.getBeforePassword();
         String afterPassword = userUpdatePasswordRequest.getAfterPassword();
 
         try {
-            userService.updatePassword(id, beforePassword, afterPassword);
-            ResponseEntity.ok(loginResponse);
+            userService.updatePassword(Id, beforePassword, afterPassword);
+            ResponseEntity.ok(new ResponseEntity<LoginResponse>(loginResponse, HttpStatus.OK));
         } catch (IllegalArgumentException e) {
             log.error("updatePassword 실패", e);
-            responseEntity = new ResponseEntity<LoginResponse>(HttpStatus.BAD_REQUEST);
+            responseEntity = FAIL_RESPONSE;
         }
         return responseEntity;
     }
 
-    @DeleteMapping("delete")
+    @DeleteMapping
     public ResponseEntity<LoginResponse> deleteId(@RequestBody UserDeleteId userDeleteId,
                                                   HttpSession session) {
-        ResponseEntity<LoginResponse> responseEntitiy = null;
-//        String id = SessionUtil.getLoginMemberId(session);
-        String id = userDeleteId.getId();
-        log.info("CHECKER - {}", userDeleteId);
+        ResponseEntity<LoginResponse> responseEntity = null;
+        String Id = SessionUtil.getLoginMemberId(session);
+
         try {
-            userService.deleteId(id, userDeleteId.getPassword());
-            responseEntitiy = new ResponseEntity<LoginResponse>(loginResponse, HttpStatus.OK);
+            userService.deleteId(Id, userDeleteId.getPassword());
+            responseEntity = new ResponseEntity<LoginResponse>(loginResponse, HttpStatus.OK);
         } catch (RuntimeException e) {
-            log.error("deleteId 실패");
-            responseEntitiy = new ResponseEntity<LoginResponse>(HttpStatus.BAD_REQUEST);
+            log.info("deleteID 실패");
+            responseEntity = FAIL_RESPONSE;
         }
-        return responseEntitiy;
+        return responseEntity;
     }
 }

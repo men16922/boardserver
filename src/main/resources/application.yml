@@ -3,7 +3,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     jdbc-url: jdbc:mysql://localhost:3306/board
     username: root
-    password: 1234
+    password: test
   cache:
     type: redis
   data:
@@ -18,4 +18,4 @@ expire:
   defaultTime: 3600 #1분
 
 mybatis:
-  mapper-locations: classpath:com.fastcampus.boardserver.mapper/*.xml
+  mapper-locations: classpath:mappers/*.xml
