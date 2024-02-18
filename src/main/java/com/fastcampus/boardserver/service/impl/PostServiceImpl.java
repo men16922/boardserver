@@ -13,6 +13,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -45,13 +46,16 @@ public class PostServiceImpl implements PostService {
             postMapper.register(postDTO);
             Integer postId = postDTO.getId();
             // 생성된 post 객체 에서 태그 리스트 생성
-            for(int i=0; i<postDTO.getTagDTOList().size(); i++){
-                TagDTO tagDTO = postDTO.getTagDTOList().get(i);
-                tagMapper.register(tagDTO);
-                Integer tagId = tagDTO.getId();
-                // M:N 관계 테이블 생성
-                tagMapper.createPostTag(tagId, postId);
+            if (!CollectionUtils.isEmpty(postDTO.getTagDTOList())) {
+                for (int i=0; i<postDTO.getTagDTOList().size(); i++){
+                    TagDTO tagDTO = postDTO.getTagDTOList().get(i);
+                    tagMapper.register(tagDTO);
+                    Integer tagId = tagDTO.getId();
+                    // M:N 관계 테이블 생성
+                    tagMapper.createPostTag(tagId, postId);
+                }
             }
+
         } else {
             log.error("register ERROR! {}", postDTO);
             throw new RuntimeException("register ERROR! 상품 등록 메서드를 확인해주세요\n" + "Params : " + postDTO);
