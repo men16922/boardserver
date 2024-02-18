@@ -19,7 +19,7 @@ public class PostSearchServiceImpl implements PostSearchService {
     @Autowired
     private PostSearchMapper productSearchMapper;
 
-//    @Async
+    //    @Async
     @Cacheable(value = "getProducts", key = "'getProducts' + #postSearchRequest.getName() + #postSearchRequest.getCategoryId()")
     @Override
     public List<PostDTO> getProducts(PostSearchRequest postSearchRequest) {
@@ -28,6 +28,17 @@ public class PostSearchServiceImpl implements PostSearchService {
             postDTOList = productSearchMapper.selectPosts(postSearchRequest);
         } catch (RuntimeException e) {
             log.error("selectPosts 실패");
+        }
+        return postDTOList;
+    }
+
+    @Override
+    public List<PostDTO> getPostByTag(String tagName) {
+        List<PostDTO> postDTOList = null;
+        try {
+            postDTOList = productSearchMapper.getPostByTag(tagName);
+        } catch (RuntimeException e) {
+            log.error("getPostByTag 실패", e.getMessage());
         }
         return postDTOList;
     }
