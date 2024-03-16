@@ -35,6 +35,10 @@ cloud:
     static:
       auto: false
 
+# slack
+slack:
+  token: xoxb-6804742179510-6834220234512-PAqjrCM7YZscwTfl21Z1Zqq7
+
 
 mybatis:
   mapper-locations: classpath:mappers/*.xml
